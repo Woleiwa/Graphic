@@ -34,6 +34,20 @@ if __name__ == '__main__':
                 save_name = line[1]
                 canvas = np.zeros([height, width, 3], np.uint8)
                 canvas.fill(255)
+                for item_id in item_dict.keys():
+                    item_type = item_dict[item_id][0]
+                    p_list = item_dict[item_id][1]
+                    algorithm = item_dict[item_id][2]
+                    color = item_dict[item_id][3]
+                    if item_type == 'line':
+                        pixels = alg.draw_line(p_list, algorithm)
+                    elif item_type == 'polygon':
+                        pixels = alg.draw_polygon(p_list, algorithm)
+                    elif item_type == 'ellipse':
+                        pixels = alg.draw_ellipse(p_list)
+
+                    point_dict[item_id] = [pixels, color]
+
                 for pixels, color in point_dict.values():
                     for x, y in pixels:
                         canvas[height - 1 - y, x] = color
@@ -51,11 +65,6 @@ if __name__ == '__main__':
                 y1 = int(line[5])
                 algorithm = line[6]
                 item_dict[item_id] = ['line', [[x0, y0], [x1, y1]], algorithm, np.array(pen_color)]
-                p_list = item_dict[item_id][1]
-                color = item_dict[item_id][3]
-                point_dict[item_id] = [pixels, color]
-                pixels = alg.draw_line(p_list, algorithm)
-                point_dict[item_id] = [pixels, color]
             elif line[0] == 'drawPolygon':
                 item_id = line[1]
                 line_len = len(line)
@@ -68,11 +77,7 @@ if __name__ == '__main__':
                     pointlist.append([x, y])
                 algorithm = line[line_len - 1]
                 item_dict[item_id] = ['polygon', pointlist, algorithm, np.array(pen_color)]
-                p_list = item_dict[item_id][1]
-                color = item_dict[item_id][3]
-                point_dict[item_id] = [pixels, color]
-                pixels = alg.draw_polygon(p_list, algorithm)
-                point_dict[item_id] = [pixels, color]
+
             elif line[0] == 'drawEllipse':
                 item_id = line[1]
                 x0 = int(line[2])
@@ -81,26 +86,23 @@ if __name__ == '__main__':
                 y1 = int(line[5])
                 algorithm = ''
                 item_dict[item_id] = ['ellipse', [[x0, y0], [x1, y1]], algorithm, np.array(pen_color)]
-                p_list = item_dict[item_id][1]
-                color = item_dict[item_id][3]
-                point_dict[item_id] = [pixels, color]
-                pixels = alg.draw_ellipse(p_list)
-                point_dict[item_id] = [pixels, color]
+
             elif line[0] == 'rotate':
                 item_id = line[1]
-                pixels = point_dict[item_id][0]
+                pixels = item_dict[item_id][1]
                 x = int(line[2])
                 y = int(line[3])
                 a = int(line[4])
                 res = alg.rotate(pixels, x, y, a)
-                point_dict[item_id][0] = res
+                item_dict[item_id][1] = res
+                
             elif line[0] == 'translate':
                 item_id = line[1]
-                pixels = point_dict[item_id][0]
+                pixels = item_dict[item_id][1]
                 x = int(line[2])
                 y = int(line[3])
                 res = alg.translate(pixels, x, y)
-                point_dict[item_id][0] = res
+                item_dict[item_id][1] = res
             ...
 
             line = fp.readline()

@@ -54,19 +54,30 @@ def draw_line(p_list, algorithm):
             sy = 1
         else:
             sy = -1
+         
+        t = 0
         if dx > dy:
-            err = dx
-        else:
-            err = -dy
+            tmp = dx
+            dx = dy
+            dy = tmp
+            t = 1
+        err = 2 * dy - dx
         while (x0 != x1) | (y0 != y1):
             result.append((x0, y0))
             e2 = err
-            if e2 > -2*dx:
-                err -= 2*dy
-                x0 += sx
-            elif e2 < 2*dy:
-                err += 2*dx
-                y0 += sy
+            if e2 >= 0:
+                if t == 1:
+                    x0 += sx
+                else:
+                    y0 += sy
+                err = err - 2 * dx
+            else:
+                if t == 1:
+                    y0 += sy
+                else:
+                    x0 += sx
+                err = err + 2 * dy
+
         result.append((x1, y1))
     return result
 
@@ -184,7 +195,7 @@ def rotate(p_list, x, y, r):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
     cos = math.cos(r/180 * math.pi)
-    sin = math.cos(r/180 * math.pi)
+    sin = math.sin(r/180 * math.pi)
     res = []
     for point in p_list:
         cur_x = int(point[0])
