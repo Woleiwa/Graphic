@@ -12,6 +12,8 @@ def draw_line(p_list, algorithm):
     :param algorithm: (string) 绘制使用的算法，包括'DDA'和'Bresenham'，此处的'Naive'仅作为示例，测试时不会出现
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
+    if p_list == []:
+        return []
     x0, y0 = p_list[0]
     x1, y1 = p_list[1]
     result = []
@@ -215,7 +217,14 @@ def scale(p_list, x, y, s):
     :param s: (float) 缩放倍数
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    res = []
+    for point in p_list:
+        dx = int(point[0]) - x
+        dy = int(point[1]) - y
+        newx = int(dx * s + x)
+        newy = int(dy * s + y)
+        res.append([newx, newy])
+    return res
 
 
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
@@ -229,4 +238,137 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    pass
+    x0 = int(p_list[0][0])
+    y0 = int(p_list[0][1])
+    x1 = int(p_list[1][0])
+    y1 = int(p_list[1][1])
+    if algorithm == 'Cohen-Sutherland':
+        j1 = 0
+        j2 = 0
+        if x0 - x_min > 0:
+            j1 += 1
+        if x_max - x0 > 0:
+            j1 += 2
+        if y0 - y_min > 0:
+            j1 += 4
+        if y_max - y0 > 0:
+            j1 += 8
+
+        if x1 - x_min > 0:
+            j2 += 1
+        if x_max - x1 > 0:
+            j2 += 2
+        if y1 - y_min > 0:
+            j2 += 4
+        if y_max - y1 > 0:
+            j2 += 8
+
+        if (j1 == 0) & (j2 == 0):
+            return p_list
+        elif (j1 & j2) != 0:
+            return []
+        if x1 == x0:
+            res_y0 = 0
+            res_y1 = 0
+            if y0 > y1:
+                max_y = y0
+                min_y = y1
+            else:
+                max_y = y1
+                min_y = y0
+
+            if max_y > y_max:
+                res_y0 = y_max
+            else:
+                res_y0 = max_y
+            if min_y < y_min:
+                res_y1 = y_min
+            else:
+                res_y1 = min_y
+            return [[x0, int(res_y0)], [x1, int(res_y1)]]
+        elif y1 == y0:
+            res_x0 = 0
+            res_x1 = 0
+            if x0 > x1:
+                max_x = x0
+                min_x = x1
+            else:
+                max_x = x1
+                min_x = x0
+            if max_x > x_max:
+                res_x0 = x_max
+            else:
+                res_x0 = max_x
+            if min_x < x_min:
+                res_x1 = x_min
+            else:
+                res_x1 = min_x
+            return [[int(res_x0), y0], [int(res_x1), y1]]
+        else:
+            if x0 > x1:
+                x0, y0, x1, y1 = x1, y1, x0, y0
+            k = (y1 - y0) / (x1 - x0)
+            m = (x1 - x0) / (y1 - y0)
+            y_left = k * (x_min - x0) + y0
+            y_right = k * (x_max - x0) + y0
+            x_up = m * (y_max - y0) + x0
+            x_down = m * (y_min - y0) + x0
+            judge = False
+            if (y_left <= y_max) & (y_left >= y_min):
+                if (x0 <= x_min) & (x1 >= x_min):
+                    x0 = x_min
+                    y0 = y_left
+                    judge = True
+            if (y_right <= y_max) & (y_left >= y_min):
+                if (x0 <= x_max) & (x1 >= x_max):
+                    x1 = x_max
+                    y1 = y_right
+                    judge = True
+
+            if y0 > y1:
+               x0, y0, x1, y1 = x1, y1, x0, y0
+            if (x_up <= x_max) & (x_up >= x_min):
+                if (y0 <= y_max) & (y1 >= y_max):
+                    x1 = x_up
+                    y1 = y_max
+                    judge = True
+            if (x_down <= x_max) & (x_down >= x_min):
+                if (y0 <= y_min) & (y1 >= y_min):
+                    x0 = x_down
+                    y0 = x_min
+                    judge = True
+
+            if judge:
+                return [[int(x0), int(y0)], [int(x1), int(y1)]]
+    elif algorithm == 'Liang-Barsky':
+        if x0 > x1:
+            x0, y0, x1, y1 = x1, y1, x0, y0
+
+        dx = x1 - x0
+        dy = y1 - y0
+        p = [x0-x1, x1-x0, y0-y1, y1-y0]
+        q = [x0-x_min, x_max-x0, y0-y_min, y_max-y0]
+        u0, u1 = 0, 1
+        for i in range(4):
+            if p[i] < 0:
+                u0 = max(u0, q[i]/p[i])
+            elif p[i] > 0:
+                u1 = min(u1, q[i]/p[i])
+            elif (p[i] == 0) and (q[i] < 0):
+                return []
+            if u0 > u1:
+                return []
+        res_x0 = 0
+        res_y0 = 0
+        res_x1 = 0
+        res_y1 = 0
+        if u0 > 0:
+            res_x0 = int(x0 + u0*(x1-x0) + 0.5)
+            res_y0 = int(y0 + u0*(y1-y0) + 0.5)
+        if u1 < 1:
+            res_x1 = int(x0 + u1*(x1-x0) + 0.5)
+            res_y1 = int(y0 + u1*(y1-y0) + 0.5)
+        result = [[res_x0, res_y0], [res_x1, res_y1]]
+
+        return result
+

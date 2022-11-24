@@ -11,8 +11,8 @@ from PIL import Image
 if __name__ == '__main__':
     #input_file = sys.argv[1]
     #output_dir = sys.argv[2]
-    input_file = 'test.txt'
-    output_dir = 'res'
+    input_file = 'input.txt'
+    output_dir = 'output'
     os.makedirs(output_dir, exist_ok=True)
 
     item_dict = {}
@@ -102,6 +102,23 @@ if __name__ == '__main__':
                 x = int(line[2])
                 y = int(line[3])
                 res = alg.translate(pixels, x, y)
+                item_dict[item_id][1] = res
+            elif line[0] == 'scale':
+                item_id = line[1]
+                pixels = item_dict[item_id][1]
+                x = int(line[2])
+                y = int(line[3])
+                s = float(line[4])
+                res = alg.scale(pixels, x, y, s)
+                item_dict[item_id][1] = res
+            elif line[0] == 'clip':
+                item_id = line[1]
+                pixels = item_dict[item_id][1]
+                x_min = int(line[2])
+                y_min = int(line[3])
+                x_max = int(line[4])
+                y_max = int(line[5])
+                res = alg.clip(pixels, x_min, y_min, x_max, y_max, line[6])
                 item_dict[item_id][1] = res
             ...
 
